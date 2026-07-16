@@ -18,14 +18,16 @@ import { BotMessageSquare, ChevronLeft, FileText, Filter, Image as ImageIcon, La
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import AiTextTransformModal from "../feature/chat/AiTextTransformModal";
 import SuggestReplyModal from "../feature/chat/SuggestReplyModal";
 import AudioRecorder from "./AudioRecorder";
 import ChatAttachmentMenu from "./ChatAttachmentMenu";
+import { EcommerceProductModal } from "./EcommerceProductModal";
 import EmojiPicker from "./EmojiPicker";
 import PaymentLinkModal from "./PaymentLinkModal";
+import GoogleMeetModal from "./GoogleMeetModal";
 import ExpiredWindowBanner from "./ExpiredWindowBanner";
 import InteractiveMessageModal from "./InteractiveMessageModal";
 import MediaSelectionModal from "./MediaSelectionModal";
@@ -77,6 +79,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
   const [isInteractiveModalOpen, setIsInteractiveModalOpen] = useState(false);
   const [isQuickReplyModalOpen, setIsQuickReplyModalOpen] = useState(false);
   const [isPaymentLinkModalOpen, setIsPaymentLinkModalOpen] = useState(false);
+  const [isEcommerceModalOpen, setIsEcommerceModalOpen] = useState(false);
+  const [isGoogleMeetModalOpen, setIsGoogleMeetModalOpen] = useState(false);
   const [isAudioRecording, setIsAudioRecording] = useState(false);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAgentTypingRef = useRef(false);
@@ -149,7 +153,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
     if (allInbound.length === 0) return null;
     return allInbound.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0].createdAt;
   })();
-  console.log("lastInboundTime", lastInboundTime);
 
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   const [createAttachment] = useCreateAttachmentMutation();
@@ -426,9 +429,28 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
     }
   };
 
-  const handleFileSelect = (file: File) => {
-    console.log("File selected:", file);
+  const handleGoogleMeetSend = async (googleMeetPayload: { google_account_id: string; meet_start_time: string; meet_end_time: string }) => {
+    if (!selectedChat || !selectedPhoneNumberId) return;
+
+    try {
+      const payload: SendMessagePayload = {
+        whatsapp_phone_number_id: currentPhoneNumberId!,
+        contact_id: currentContactId!,
+        type: "google_meet" as any,
+        messageType: "google_meet" as any,
+        provider: "business_api",
+        ...googleMeetPayload,
+      } as any;
+
+      await sendMessage(payload).unwrap();
+      toast.success("Google Meet link created and sent!");
+      dispatch(clearReplyToMessage());
+    } catch (error: any) {
+      toast.error(error?.data?.error || error?.message || "Failed to create Google Meet link");
+    }
   };
+
+  const handleFileSelect = (file: File) => {};
 
   const handleMediaSelect = (media: Attachment[]) => {
     setSelectedMedia((prev) => {
@@ -497,6 +519,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
       setTimeout(() => {
         messageElement.classList.remove("bg-primary/10", "dark:bg-primary/30", "transition-colors", "duration-500", "py-5");
       }, 2000);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPendingScrollMessageId(null);
       return;
     }
@@ -528,6 +551,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
       setIsWindowExpired(false);
     }
   }, [lastInboundTime]);
+
+  const handleTimerExpire = useCallback(() => {
+    setIsWindowExpired(true);
+  }, []);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -603,7 +630,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
         <div className="flex items-center sm:gap-1 gap-0 [@media(max-width:430px)]:ml-auto rtl:[@media(max-width:430px)]:ml-0 rtl:[@media(max-width:430px)]:mr-auto [@media(max-width:430px)]:flex-wrap">
           {lastInboundTime && !isBaileys && (
             <div className="mr-2">
-              <WhatsAppTimer key={currentContactId} lastInboundTime={lastInboundTime} onExpire={() => setIsWindowExpired(true)} />
+              <WhatsAppTimer key={currentContactId} lastInboundTime={lastInboundTime} onExpire={handleTimerExpire} />
             </div>
           )}
           {isModal && (
@@ -736,7 +763,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
           )}
           {isAudioRecording ? (
             <div className="w-full bg-transparent">
-              <AudioRecorder onSend={handleAudioSend} onCancel={() => setIsAudioRecording(false)} />
+              <AudioRecorder onSend={handleAudioSend} onCancel={() => setIsAudioRecording(false)} isSending={isSending} />
             </div>
           ) : (
             <div className="relative flex items-center gap-3 p-2 bg-transparent [@media(max-width:535px)]:flex-col group">
@@ -762,7 +789,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
                   </Button>
                 </PlanFeature>
 
-                <ChatAttachmentMenu isBaileys={isBaileys} onFileSelect={handleFileSelect} onMediaLibraryOpen={() => setIsMediaModalOpen(true)} onLocationClick={() => setIsLocationModalOpen(true)} onInteractiveClick={handleInteractiveClick} onAudioClick={() => setIsAudioRecording(true)} onPaymentLinkClick={() => setIsPaymentLinkModalOpen(true)} />
+                <ChatAttachmentMenu isBaileys={isBaileys} onFileSelect={handleFileSelect} onMediaLibraryOpen={() => setIsMediaModalOpen(true)} onLocationClick={() => setIsLocationModalOpen(true)} onInteractiveClick={handleInteractiveClick} onAudioClick={() => setIsAudioRecording(true)} onPaymentLinkClick={() => setIsPaymentLinkModalOpen(true)} onEcommerceClick={() => setIsEcommerceModalOpen(true)} onGoogleMeetClick={() => setIsGoogleMeetModalOpen(true)} />
 
                 <PlanFeature feature="quick_replies">
                   <Button
@@ -829,6 +856,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({ contactId, phoneNumberId, contactNa
       <QuickReplyModal isOpen={isQuickReplyModalOpen} onClose={() => setIsQuickReplyModalOpen(false)} onSelect={handleUseReply} onDirectSend={handleDirectSend} />
       <PaymentLinkModal isOpen={isPaymentLinkModalOpen} onClose={() => setIsPaymentLinkModalOpen(false)} onSend={handlePaymentLinkSend} isSending={isSending} />
       <MessageDateFilterModal isOpen={isDateFilterOpen} onClose={() => setIsDateFilterOpen(false)} onApply={setDateFilters} initialFilters={dateFilters} />
+      <EcommerceProductModal isOpen={isEcommerceModalOpen} onClose={() => setIsEcommerceModalOpen(false)} />
+      <GoogleMeetModal isOpen={isGoogleMeetModalOpen} onClose={() => setIsGoogleMeetModalOpen(false)} onSend={handleGoogleMeetSend} isSending={isSending} />
     </div>
   );
 };

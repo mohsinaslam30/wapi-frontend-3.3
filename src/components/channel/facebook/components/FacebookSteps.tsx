@@ -1,21 +1,9 @@
 "use client";
 
+import { FacebookStepsProps } from "@/src/types/channel";
 import React from "react";
 
-interface Step {
-  title: string;
-  description: string;
-}
 
-interface FacebookStepsProps {
-  stepsSection: {
-    badge?: string;
-    title: string;
-    subtitle?: string;
-    steps: Step[];
-  };
-  fbGradient: string;
-}
 
 export default function FacebookSteps({ stepsSection, fbGradient }: FacebookStepsProps) {
   if (stepsSection.steps.length === 0) return null;

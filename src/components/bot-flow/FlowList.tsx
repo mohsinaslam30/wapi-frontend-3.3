@@ -3,22 +3,31 @@
 
 import Can from "@/src/components/shared/Can";
 import { ROUTES } from "@/src/constants/route";
+import {
+  badgeStyles,
+  displayNames,
+  filters,
+  flowListColumns,
+} from "@/src/data/botFlow";
 import { Button } from "@/src/elements/ui/button";
-import { Switch } from "@/src/elements/ui/switch";
-import { useDeleteAutomationFlowMutation, useGetAutomationFlowsQuery, useToggleAutomationFlowMutation, useTogglePauseAutomationFlowMutation } from "@/src/redux/api/automationApi";
+import {
+  useDeleteAutomationFlowMutation,
+  useGetAutomationFlowsQuery,
+  useToggleAutomationFlowMutation,
+  useTogglePauseAutomationFlowMutation,
+} from "@/src/redux/api/automationApi";
+import { useAppSelector } from "@/src/redux/hooks";
 import CommonHeader from "@/src/shared/CommonHeader";
 import ConfirmModal from "@/src/shared/ConfirmModal";
 import { DataTable } from "@/src/shared/DataTable";
 import { Column } from "@/src/types/shared";
 import useDebounce from "@/src/utils/hooks/useDebounce";
-import { Edit2, Trash2, Pause, Play } from "lucide-react";
+import { Edit2, Pause, Play, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { useAppSelector } from "@/src/redux/hooks";
-
 
 export default function FlowList() {
   const { t } = useTranslation();
@@ -51,34 +60,40 @@ export default function FlowList() {
     status: statusFilter,
   });
 
-  const [deleteFlow, { isLoading: isDeleting }] = useDeleteAutomationFlowMutation();
+  const [deleteFlow, { isLoading: isDeleting }] =
+    useDeleteAutomationFlowMutation();
   const [toggleFlow] = useToggleAutomationFlowMutation();
-  const [togglePauseFlow, { isLoading: isPausing }] = useTogglePauseAutomationFlowMutation();
+  const [togglePauseFlow, { isLoading: isPausing }] =
+    useTogglePauseAutomationFlowMutation();
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [pauseFlowItem, setPauseFlowItem] = useState<{ id: string; isPaused: boolean } | null>(null);
-  const [localStatuses, setLocalStatuses] = useState<Record<string, boolean>>({});
+  const [pauseFlowItem, setPauseFlowItem] = useState<{
+    id: string;
+    isPaused: boolean;
+  } | null>(null);
+  const [localStatuses, setLocalStatuses] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const flows = flowsResult?.data || [];
   const totalCount = flowsResult?.pagination?.totalItems || 0;
 
-  const [visibleColumns, setVisibleColumns] = useState([
-    { id: "Name", label: "Name", isVisible: true },
-    { id: "Platform", label: "Platform", isVisible: true },
-    { id: "Nodes", label: "Nodes", isVisible: true },
-    { id: "Publish Status", label: "Publish Status", isVisible: true },
-    { id: "Status", label: "Status", isVisible: true },
-    { id: "Created At", label: "Created At", isVisible: true },
-    { id: "Actions", label: "Actions", isVisible: true },
-  ]);
+  const [visibleColumns, setVisibleColumns] = useState(flowListColumns);
 
   const handleColumnToggle = (columnId: string) => {
-    setVisibleColumns((prev) => prev.map((col) => (col.id === columnId ? { ...col, isVisible: !col.isVisible } : col)));
+    setVisibleColumns((prev) =>
+      prev.map((col) =>
+        col.id === columnId ? { ...col, isVisible: !col.isVisible } : col,
+      ),
+    );
   };
 
   const handleDelete = async () => {
     if (deleteId) {
       try {
-        await deleteFlow({ ids: [deleteId], workspace_id: workspaceId }).unwrap();
+        await deleteFlow({
+          ids: [deleteId],
+          workspace_id: workspaceId,
+        }).unwrap();
         toast.success("Flow deleted successfully");
         setDeleteId(null);
       } catch {
@@ -95,7 +110,9 @@ export default function FlowList() {
           is_paused: !pauseFlowItem.isPaused,
           workspace_id: workspaceId,
         }).unwrap();
-        toast.success(`Flow ${!pauseFlowItem.isPaused ? "paused" : "resumed"} successfully`);
+        toast.success(
+          `Flow ${!pauseFlowItem.isPaused ? "paused" : "resumed"} successfully`,
+        );
         setPauseFlowItem(null);
       } catch {
         toast.error("Failed to update flow pause state");
@@ -110,11 +127,18 @@ export default function FlowList() {
 
   const confirmBulkDelete = async () => {
     try {
-      await deleteFlow({ ids: selectedIds, workspace_id: workspaceId }).unwrap();
+      await deleteFlow({
+        ids: selectedIds,
+        workspace_id: workspaceId,
+      }).unwrap();
       toast.success(`${selectedIds.length} flows deleted successfully`);
       setSelectedIds([]);
     } catch (error: any) {
-      toast.error(error?.data?.message || error?.data?.message || "Failed to delete flows");
+      toast.error(
+        error?.data?.message ||
+          error?.data?.message ||
+          "Failed to delete flows",
+      );
     } finally {
       setBulkConfirmOpen(false);
     }
@@ -123,7 +147,11 @@ export default function FlowList() {
   const handleToggle = async (id: string, currentStatus: boolean) => {
     setLocalStatuses((prev) => ({ ...prev, [id]: !currentStatus }));
     try {
-      await toggleFlow({ flowId: id, is_active: !currentStatus, workspace_id: workspaceId }).unwrap();
+      await toggleFlow({
+        flowId: id,
+        is_active: !currentStatus,
+        workspace_id: workspaceId,
+      }).unwrap();
       toast.success(`Flow ${!currentStatus ? "activated" : "deactivated"}`);
     } catch {
       setLocalStatuses((prev) => {
@@ -171,8 +199,12 @@ export default function FlowList() {
       sortKey: "name",
       cell: (flow) => (
         <div>
-          <div className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">{flow.name}</div>
-          <div className="text-xs text-gray-500">{flow.description || "No description"}</div>
+          <div className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
+            {flow.name}
+          </div>
+          <div className="text-xs text-gray-500">
+            {flow.description || "No description"}
+          </div>
         </div>
       ),
     },
@@ -182,27 +214,14 @@ export default function FlowList() {
       sortKey: "platform",
       cell: (flow) => {
         const platform = flow.platform || "all";
-        const badgeStyles: Record<string, string> = {
-          all: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/30",
-          whatsapp: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30",
-          telegram: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/20 dark:text-sky-400 dark:border-sky-900/30",
-          facebook: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30",
-          instagram: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/20 dark:text-pink-400 dark:border-pink-900/30",
-        };
-
-        const displayNames: Record<string, string> = {
-          all: "All Channels",
-          whatsapp: "WhatsApp",
-          telegram: "Telegram",
-          facebook: "Facebook",
-          instagram: "Instagram",
-        };
 
         const style = badgeStyles[platform] || badgeStyles.all;
         const name = displayNames[platform] || displayNames.all;
 
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${style}`}>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${style}`}
+          >
             {name}
           </span>
         );
@@ -212,7 +231,11 @@ export default function FlowList() {
       header: "Nodes",
       sortable: true,
       sortKey: "nodes",
-      cell: (flow) => <div className="text-sm text-gray-600">{flow.nodes?.length || 0} nodes</div>,
+      cell: (flow) => (
+        <div className="text-sm text-gray-600">
+          {flow.nodes?.length || 0} nodes
+        </div>
+      ),
     },
     {
       header: "Publish Status",
@@ -221,11 +244,13 @@ export default function FlowList() {
       cell: (flow) => {
         const isActive = localStatuses[flow._id] ?? flow.is_active;
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-            isActive 
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-indigo-900/30" 
-              : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/10 dark:text-gray-400 dark:border-gray-800/30"
-          }`}>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+              isActive
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-indigo-900/30"
+                : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/10 dark:text-gray-400 dark:border-gray-800/30"
+            }`}
+          >
             {isActive ? "Publish" : "Draft"}
           </span>
         );
@@ -235,7 +260,11 @@ export default function FlowList() {
       header: "Created At",
       sortable: true,
       sortKey: "created_at",
-      cell: (flow) => <span className="text-sm text-gray-500">{new Date(flow.created_at).toLocaleDateString()}</span>, 
+      cell: (flow) => (
+        <span className="text-sm text-gray-500">
+          {new Date(flow.created_at).toLocaleDateString()}
+        </span>
+      ),
     },
     {
       header: "Actions",
@@ -247,7 +276,11 @@ export default function FlowList() {
           <div className="flex justify-end gap-2">
             <Can permission="update.automation_flows">
               <Link href={`${ROUTES.BuilderBotFlow}/${flow._id}`}>
-                <Button variant="outline" size="sm" className="w-10 h-10 border-none text-primary hover:text-primary hover:bg-primary/10 rounded-lg dark:hover:bg-primary/20 transition-all">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-10 h-10 border-none text-primary hover:text-primary hover:bg-primary/10 rounded-lg dark:hover:bg-primary/20 transition-all"
+                >
                   <Edit2 size={14} />
                 </Button>
               </Link>
@@ -261,8 +294,8 @@ export default function FlowList() {
                   !isActive
                     ? "text-gray-400 cursor-not-allowed bg-transparent"
                     : isPaused
-                    ? "text-emerald-600 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
-                    : "text-amber-600 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                      ? "text-emerald-600 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                      : "text-amber-600 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
                 }`}
                 onClick={() => setPauseFlowItem({ id: flow._id, isPaused })}
               >
@@ -270,7 +303,12 @@ export default function FlowList() {
               </Button>
             </Can>
             <Can permission="delete.automation_flows">
-              <Button variant="outline" size="sm" className="w-10 h-10 border-none text-red-600 hover:text-red-600 dark:text-red-500 hover:bg-red-50 rounded-lg transition-all dark:hover:bg-red-900/20" onClick={() => setDeleteId(flow._id)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-10 h-10 border-none text-red-600 hover:text-red-600 dark:text-red-500 hover:bg-red-50 rounded-lg transition-all dark:hover:bg-red-900/20"
+                onClick={() => setDeleteId(flow._id)}
+              >
                 <Trash2 size={14} />
               </Button>
             </Can>
@@ -282,16 +320,28 @@ export default function FlowList() {
 
   return (
     <div className="sm:p-8 pt-0! p-4 space-y-8 bg-(--page-body-bg) dark:bg-(--dark-body)">
-      <CommonHeader title={t("flow_builder_page_title")} description={t("flow_builder_page_description")} onSearch={handleSearch} searchTerm={inputValue} searchPlaceholder="Search flows..." featureKey="template_bots_used" onRefresh={handleRefresh} onAddClick={onAddClick} addLabel="Add New Flow" addPermission="create.automation_flows" deletePermission="delete.automation_flows" isLoading={isLoading} columns={visibleColumns} onColumnToggle={handleColumnToggle} onBulkDelete={handleBulkDelete} selectedCount={selectedIds.length} />
+      <CommonHeader
+        title={t("flow_builder_page_title")}
+        description={t("flow_builder_page_description")}
+        onSearch={handleSearch}
+        searchTerm={inputValue}
+        searchPlaceholder="Search flows..."
+        featureKey="template_bots_used"
+        onRefresh={handleRefresh}
+        onAddClick={onAddClick}
+        addLabel="Add New Flow"
+        addPermission="create.automation_flows"
+        deletePermission="delete.automation_flows"
+        isLoading={isLoading}
+        columns={visibleColumns}
+        onColumnToggle={handleColumnToggle}
+        onBulkDelete={handleBulkDelete}
+        selectedCount={selectedIds.length}
+      />
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 flex-wrap mb-4">
-        {[
-          { key: "all", label: "Show All" },
-          { key: "active", label: "Publish" },
-          { key: "draft", label: "Draft" },
-          { key: "paused", label: "Pause" },
-        ].map((tab) => (
+        {filters.map((tab) => (
           <Button
             key={tab.key}
             onClick={() => {
@@ -310,17 +360,70 @@ export default function FlowList() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden dark:bg-(--card-color) dark:border-(--card-border-color)">
-        <DataTable data={flows} columns={columns.filter((col) => visibleColumns.find((vc) => vc.id === col.header)?.isVisible !== false)} isLoading={isLoading} isFetching={isFetching || isDeleting} totalCount={totalCount} page={page} limit={limit} onPageChange={handlePageChange} onLimitChange={handleLimitChange} enableSelection={false} selectedIds={selectedIds} onSelectionChange={setSelectedIds} getRowId={(item) => item._id} emptyMessage={searchTerm ? `No flows found matching "${searchTerm}"` : "No automation flows found. Create your first one!"} className="border-none shadow-none rounded-none" onSortChange={handleSort} sortBy={sortBy} sortOrder={sortOrder} />
+        <DataTable
+          data={flows}
+          columns={columns.filter(
+            (col) =>
+              visibleColumns.find((vc) => vc.id === col.header)?.isVisible !==
+              false,
+          )}
+          isLoading={isLoading}
+          isFetching={isFetching || isDeleting}
+          totalCount={totalCount}
+          page={page}
+          limit={limit}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+          enableSelection={false}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          getRowId={(item) => item._id}
+          emptyMessage={
+            searchTerm
+              ? `No flows found matching "${searchTerm}"`
+              : "No automation flows found. Create your first one!"
+          }
+          className="border-none shadow-none rounded-none"
+          onSortChange={handleSort}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          actionPermission={[
+            "update.automation_flows",
+            "delete.automation_flows",
+          ]}
+        />
       </div>
 
-      <ConfirmModal isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} isLoading={isDeleting} title="Delete Automation Flow" subtitle="Are you sure you want to delete this automation flow? This action cannot be undone and all associated data will be permanently removed." confirmText="Delete Flow" variant="danger" />
-      <ConfirmModal isOpen={bulkConfirmOpen} onClose={() => setBulkConfirmOpen(false)} onConfirm={confirmBulkDelete} isLoading={isDeleting} title="Bulk Delete Flows" subtitle={`Are you sure you want to delete ${selectedIds.length} selected flows? This action cannot be undone.`} confirmText="Delete All" variant="danger" />
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        title="Delete Automation Flow"
+        subtitle="Are you sure you want to delete this automation flow? This action cannot be undone and all associated data will be permanently removed."
+        confirmText="Delete Flow"
+        variant="danger"
+      />
+      <ConfirmModal
+        isOpen={bulkConfirmOpen}
+        onClose={() => setBulkConfirmOpen(false)}
+        onConfirm={confirmBulkDelete}
+        isLoading={isDeleting}
+        title="Bulk Delete Flows"
+        subtitle={`Are you sure you want to delete ${selectedIds.length} selected flows? This action cannot be undone.`}
+        confirmText="Delete All"
+        variant="danger"
+      />
       <ConfirmModal
         isOpen={!!pauseFlowItem}
         onClose={() => setPauseFlowItem(null)}
         onConfirm={handlePauseConfirm}
         isLoading={isPausing}
-        title={pauseFlowItem?.isPaused ? "Resume Automation Flow" : "Pause Automation Flow"}
+        title={
+          pauseFlowItem?.isPaused
+            ? "Resume Automation Flow"
+            : "Pause Automation Flow"
+        }
         subtitle={
           pauseFlowItem?.isPaused
             ? "Are you sure you want to resume this automation flow? It will start executing triggers again."

@@ -1,12 +1,13 @@
 import { Language } from "@/src/data/Languages";
 import { Attachment, Contact } from "../components";
+import { Facebook, Instagram, MessageCircle, Send } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type MessageType = "text" | "image" | "sticker" | "video" | "audio" | "document" | "template" | "interactive" | "location" | "order" | "system_messages" | "reaction" | "payment_link" | "carousel" | "comment" | "story_reply";
+export type MessageType = "text" | "image" | "sticker" | "video" | "audio" | "document" | "template" | "interactive" | "location" | "order" | "system_messages" | "reaction" | "payment_link" | "google_meet" | "carousel" | "comment" | "story_reply";
 
 export interface InteractiveData {
-  interactiveType: "button" | "list" | "flow";
-  buttons?: Array<{ id: string; title: string }>;
+  interactiveType: "button" | "list" | "flow" | "cta_url";
+  buttons?: any;
   flow_cta?: string;
   list?: {
     header: string;
@@ -161,6 +162,9 @@ export interface SendMessagePayload {
   description?: string;
   gateway_id?: string;
   currency?: string;
+  google_account_id?: string;
+  meet_start_time?: string;
+  meet_end_time?: string;
 }
 
 export interface ChatState {
@@ -187,6 +191,7 @@ export interface RecentChatResponseItem {
     unreadCount: string;
   };
   is_pinned?: boolean;
+  is_snoozed?: boolean;
 }
 
 export interface RecentChatData {
@@ -463,6 +468,7 @@ export interface ProfileMediaAssetsProps {
 export interface AudioRecorderProps {
   onSend: (blob: Blob) => void;
   onCancel: () => void;
+  isSending?: boolean;
 }
 
 export interface ChatAreaProps {
@@ -481,6 +487,8 @@ export interface ChatAttachmentMenuProps {
   onInteractiveClick: (type: "button" | "list") => void;
   onAudioClick?: () => void;
   onPaymentLinkClick: () => void;
+  onEcommerceClick?: () => void;
+  onGoogleMeetClick?: () => void;
   isBaileys?: boolean;
 }
 
@@ -564,4 +572,87 @@ export interface QuickReplyModalProps {
   onClose: () => void;
   onSelect: (message: string) => void;
   onDirectSend: (message: string) => void;
+}
+
+export interface StickerMessageProps {
+  message: ChatMessage;
+  isWindowExpired?: boolean;
+}
+
+export interface ProfileAssignAICallAgentProps {
+  agents: { _id: string; name: string }[];
+  selectedAgentId?: string;
+  assignedAgent?: { _id: string; name: string } | null;
+  onAssign: (agentId: string) => void;
+  onUnassign: () => void;
+  isLoading: boolean;
+  isUnassigning: boolean;
+} 
+
+export interface ProfileAssignChatbotProps {
+  chatbots: { _id: string; name: string }[];
+  selectedChatbotId?: string;
+  assignedChatbot?: { _id: string; name: string } | null;
+  onAssign: (chatbotId: string) => void;
+  onUnassign: () => void;
+  isLoading: boolean;
+  isUnassigning: boolean;
+}
+
+export interface ProfileClearChatProps {
+  onClearChat: () => Promise<void>;
+  isLoading: boolean;
+}
+
+export interface ChatListItemDropdownProps {
+  contactId: string;
+  contactName: string;
+  contactNumber: string;
+  phoneNumberId: string;
+  isSnoozed?: boolean;
+}
+
+
+
+  export interface ChatSidebarItemProps {
+    chat: RecentChatResponseItem;
+    isSelected: boolean;
+    isSelectionMode: boolean;
+    selectedChatId?: string;
+    isAgent: boolean;
+    user: any;
+    app_name: string;
+    selectedPhoneNumberId: string;
+    onSelect: (chat: RecentChatResponseItem) => void;
+    onToggleSelection: (contactId: string) => void;
+    onTogglePin: (e: React.MouseEvent, chat: RecentChatResponseItem) => void;
+  }
+
+  export interface EmojiPickerProps {
+  onEmojiSelect: (emoji: string) => void;
+}
+
+export interface LocalAttachment extends Attachment {
+  localFile?: File;
+}
+
+export interface NotificationSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export interface PaymentLinkModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSend: (payload: Partial<SendMessagePayload>) => Promise<void>;
+  isSending: boolean;
+}
+
+export type TabKey = "admin" | "custom" | "favorites";
+
+export interface GoogleMeetModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSend: (payload: { google_account_id: string; meet_start_time: string; meet_end_time: string }) => Promise<void>;
+  isSending: boolean;
 }

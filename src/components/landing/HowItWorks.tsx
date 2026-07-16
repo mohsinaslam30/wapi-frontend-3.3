@@ -1,14 +1,13 @@
 "use client";
 
-import React from "react";
-import { PlatformProps } from "../../types/landingPage";
-import { CheckCircle2, ArrowRight } from "lucide-react";
-import { Button } from "@/src/elements/ui/button";
 import { ROUTES } from "@/src/constants";
+import { Button } from "@/src/elements/ui/button";
 import { useAppSelector } from "@/src/redux/hooks";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import React from "react";
 import Images from "../../shared/Image";
-import { getUrlWithBasePath } from "@/src/utils";
+import { PlatformProps } from "../../types/landingPage";
 
 const HowItWorks: React.FC<PlatformProps> = ({ data }) => {
   const router = useRouter();

@@ -18,7 +18,6 @@ import { SequenceStepModalProps } from "@/src/types/replyMaterial";
 import { getTemplateVariables, isMarketingTemplate } from "@/src/utils/template";
 import { useAppSelector } from "@/src/redux/hooks";
 import Image from "next/image";
-import { CampaignCard, CarouselProduct, CONTACT_SYSTEM_FIELDS, TemplateCarouselCard } from "../campaigns/wizard/types";
 import { MaterialPreviewModal } from "../shared/MaterialPreviewModal";
 import MaterialPicker from "./sequence-step/MaterialPicker";
 import SchedulingConfig from "./sequence-step/SchedulingConfig";
@@ -26,6 +25,8 @@ import SourceTypeSelector from "./sequence-step/SourceTypeSelector";
 import TemplateConfig from "./sequence-step/TemplateConfig";
 import TimingConfig from "./sequence-step/TimingConfig";
 import { Label } from "@/src/elements/ui/label";
+import { CONTACT_SYSTEM_FIELDS } from "@/src/data/campaign";
+import { CampaignCard, CarouselProduct, TemplateCarouselCard } from "@/src/types/campaign";
 
 const SequenceStepModal: React.FC<SequenceStepModalProps> = ({ isOpen, onClose, sequenceId, wabaId, editStep, onSuccess, nextSort, platform = "whatsapp" }) => {
   const isEdit = !!editStep;
@@ -207,10 +208,6 @@ const SequenceStepModal: React.FC<SequenceStepModalProps> = ({ isOpen, onClose, 
           toast.error(`Variable {{${v}}} is required`);
           return;
         }
-      }
-      if (isMarketingTemplate(selectedMaterial) && !couponCode) {
-        toast.error("Coupon code is required");
-        return;
       }
     }
 

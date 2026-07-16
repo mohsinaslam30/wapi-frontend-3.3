@@ -341,7 +341,16 @@ export const chatApi = baseApi.injectEndpoints({
                             if (msg) {
                               if (realId) msg.id = realId;
                               if (realWaMessageId) msg.wa_message_id = realWaMessageId;
-                              if (realContent) msg.content = realContent;
+                              if (realContent) {
+                                msg.content = realContent;
+                              } else if (response?.data?.content) {
+                                msg.content = response.data.content;
+                              }
+                              if (response?.data?.message_type) {
+                                msg.messageType = response.data.message_type;
+                              } else if (response?.data?.type) {
+                                msg.messageType = response.data.type;
+                              }
                               if (response.data.wa_status) msg.wa_status = response.data.wa_status;
                               if (response.data.delivery_status) msg.delivery_status = response.data.delivery_status;
                             }
@@ -378,6 +387,22 @@ export const chatApi = baseApi.injectEndpoints({
     unassignAgent: builder.mutation<void, { contact_id: string; whatsapp_phone_number_id: string }>({
       query: (body) => ({
         url: "/whatsapp/unassign-chat",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (result, error, { contact_id }) => [{ type: "Chats", id: contact_id }],
+    }),
+    assignChatbot: builder.mutation<void, { contact_id: string; chatbot_id: string }>({
+      query: (body) => ({
+        url: "/whatsapp/assign-chatbot",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (result, error, { contact_id }) => [{ type: "Chats", id: contact_id }],
+    }),
+    unassignChatbot: builder.mutation<void, { contact_id: string }>({
+      query: (body) => ({
+        url: "/whatsapp/unassign-chatbot",
         method: "POST",
         body,
       }),
@@ -452,6 +477,44 @@ export const chatApi = baseApi.injectEndpoints({
                   const chat = draft.data?.find((c: any) => c.contact.id === contact_id);
                   if (chat) {
                     chat.is_pinned = !chat.is_pinned;
+                  }
+                }
+              )
+            );
+            patchResults.push(patchResult);
+          }
+        });
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResults.forEach((patchResult) => patchResult.undo());
+        }
+      },
+    }),
+    toggleSnoozeChat: builder.mutation<{ success: boolean; data?: { id: string; is_snoozed: boolean } }, { contact_id: string; is_snoozed?: boolean; snooze_time_minutes?: number; snooze_count_limit?: number }>({
+      query: (body) => ({
+        url: "/whatsapp/toggle-snooze",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Chats"],
+      async onQueryStarted({ contact_id }, { dispatch, queryFulfilled, getState }) {
+        const state: any = getState();
+        const queries = state.api?.queries || {};
+        const patchResults: any[] = [];
+
+        Object.values(queries).forEach((query: any) => {
+          if (query?.endpointName === "getRecentChats" && query?.status === "fulfilled") {
+            const originalArgs = query.originalArgs;
+            const patchResult = dispatch(
+              chatApi.util.updateQueryData(
+                "getRecentChats",
+                originalArgs,
+                (draft) => {
+                  const chat = draft.data?.find((c: any) => c.contact.id === contact_id);
+                  if (chat) {
+                    chat.is_snoozed = !chat.is_snoozed;
                   }
                 }
               )
@@ -554,7 +617,47 @@ export const chatApi = baseApi.injectEndpoints({
         body: { status: "read" }, 
       }),
     }),
+    sendProductMessage: builder.mutation<any, { whatsapp_phone_number_id: string; contact_id: string; product_id: string }>({
+      query: (body) => ({
+        url: "/whatsapp/send-product",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Messages", "Chats"],
+    }),
+    sendOrderMessage: builder.mutation<any, { whatsapp_phone_number_id: string; contact_id: string; product_id: string; checkout_url?: string; order_title?: string; order_description?: string }>({
+      query: (body) => ({
+        url: "/whatsapp/send-order",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Messages", "Chats"],
+    }),
   }),
 });
 
-export const { useGetRecentChatsQuery, useGetMessagesQuery, useLazyGetMessagesQuery, useSendMessageMutation, useGetContactProfileQuery, useAssignAgentMutation, useUnassignAgentMutation, useSuggestReplyMutation, useTransformMessageMutation, useAddChatNoteMutation, useDeleteChatNoteMutation, useAddChatTagMutation, useDeleteChatTagMutation, useTogglePinChatMutation, useUpdateChatStatusMutation, useDeleteChatMutation, useClearChatMutation, useMarkMessageAsReadMutation } = chatApi;
+export const { 
+  useGetRecentChatsQuery, 
+  useGetMessagesQuery, 
+  useLazyGetMessagesQuery, 
+  useSendMessageMutation, 
+  useGetContactProfileQuery, 
+  useAssignAgentMutation, 
+  useUnassignAgentMutation, 
+  useAssignChatbotMutation,
+  useUnassignChatbotMutation, 
+  useSuggestReplyMutation, 
+  useTransformMessageMutation, 
+  useAddChatNoteMutation, 
+  useDeleteChatNoteMutation, 
+  useAddChatTagMutation, 
+  useDeleteChatTagMutation, 
+  useTogglePinChatMutation,
+  useToggleSnoozeChatMutation,
+  useUpdateChatStatusMutation, 
+  useDeleteChatMutation, 
+  useClearChatMutation, 
+  useMarkMessageAsReadMutation,
+  useSendProductMessageMutation,
+  useSendOrderMessageMutation
+} = chatApi;

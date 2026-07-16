@@ -41,7 +41,6 @@ const AgentTaskListSidebar = ({ agentId, onSelectTask, onClose }: AgentTaskListS
     if (filter === "all") return true;
     return task.task_priority === filter;
   });
-  console.log("🚀 ~ AgentTaskListSidebar ~ tasks:", tasks[0]?.status)
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {

@@ -152,6 +152,8 @@ export const createOptimisticMessages = (payload: SendMessagePayload | FormData,
       } else if (messageType === "payment_link") {
         const { amount, currency, description } = payload as any;
         content = `💳 *Payment Required*\n\n*Description:* ${description}\n*Amount:* ${currency} ${amount}\n\n_Generating payment link..._`;
+      } else if (messageType === "google_meet") {
+        content = "📅 *Google Meet Scheduled*\n\n_Generating Google Meet link..._";
       }
     }
 

@@ -206,11 +206,11 @@ const Sidebar = ({ onMenuClick }: SidebarProps) => {
 
     if (isVisuallyExpanded) {
       const url = isDark ? logo_dark_url : logo_light_url;
-      return getUrlWithBasePath(resolveUrl(url) || "/assets/logos/logo1.png");
+      return getUrlWithBasePath(resolveUrl(url) ||(isDark ? "/assets/logos/logo3.png" : "/assets/logos/logo1.png"));
     }
 
     const url = isDark ? sidebar_dark_logo_url : sidebar_light_logo_url;
-    return getUrlWithBasePath(resolveUrl(url) || "/assets/logos/sidebarLogo.png");
+    return getUrlWithBasePath(resolveUrl(url) ||( isDark ? "/assets/logos/sidebarLogoDark.png" : "/assets/logos/sidebarLogo.png"))
   }, [mounted, theme, isVisuallyExpanded, logo_light_url, logo_dark_url, sidebar_light_logo_url, sidebar_dark_logo_url]);
 
   const [openSections, setOpenSections] = useState<string[]>(["overview_sidebar_title", "communication_sidebar_title"]);

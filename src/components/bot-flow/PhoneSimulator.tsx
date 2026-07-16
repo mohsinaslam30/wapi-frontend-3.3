@@ -13,49 +13,10 @@ import {
 import { Button } from "@/src/elements/ui/button";
 import { Input } from "@/src/elements/ui/input";
 import { cn } from "@/src/lib/utils";
+import { PhoneSimulatorProps } from "@/src/types/botFlow";
+import Image from "next/image";
 
-export interface ChatMessage {
-  id: string;
-  sender: "user" | "bot" | "system";
-  text: string;
-  timestamp: string;
-  messageType?: string;
-  mediaUrl?: string;
-  buttons?: Array<{ id: string; title: string }>;
-  listParams?: {
-    header?: string;
-    body?: string;
-    footer?: string;
-    buttonTitle?: string;
-    items?: Array<{ id: string; title: string; description?: string }>;
-  };
-  locationParams?: {
-    latitude: number;
-    longitude: number;
-    name?: string;
-    address?: string;
-  };
-}
 
-interface PhoneSimulatorProps {
-  messages: ChatMessage[];
-  isTyping: boolean;
-  inputText: string;
-  setInputText: (text: string) => void;
-  activeListSheet: ChatMessage | null;
-  setActiveListSheet: (msg: ChatMessage | null) => void;
-  executeSendMessage: (text: string, interactiveId?: string) => Promise<void>;
-  isTesting: boolean;
-  handleReset: (silent?: boolean) => Promise<void>;
-  pDetails: {
-    name: string;
-    color: string;
-    icon: React.ReactNode;
-    avatarColor: string;
-    userBubbleColor: string;
-  };
-  chatEndRef: React.RefObject<HTMLDivElement | null>;
-}
 
 export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
   messages,
@@ -71,7 +32,7 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
   chatEndRef,
 }) => {
   return (
-    <div className="w-[340px] h-[600px] bg-slate-900 border-[10px] border-slate-800 rounded-[36px] shadow-2xl relative flex flex-col overflow-hidden ring-1 ring-slate-700/50">
+    <div className="w-full max-w-[340px] h-[600px] max-h-full bg-slate-900 border-[8px] sm:border-[10px] border-slate-800 dark:border-(--card-border-color) rounded-[36px] shadow-2xl relative flex flex-col overflow-hidden ring-1 ring-slate-700/50 dark:ring-(--card-border-color)">
       {/* Top Ear Piece / Dynamic Island */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-4 bg-black rounded-full z-50 flex items-center justify-between px-3">
         <span className="w-1.5 h-1.5 rounded-full bg-slate-800" />
@@ -104,14 +65,14 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
             </div>
           </div>
 
-          <button
+          <Button variant="unstyled"
             onClick={() => handleReset(false)}
             disabled={isTesting}
             className="p-1.5 hover:bg-white/10 rounded-full transition-colors active:scale-90"
             title="Reset Simulator"
           >
             <RotateCcw size={14} className={cn(isTesting && "animate-spin")} />
-          </button>
+          </Button>
         </div>
 
         {/* Chat Message Box Area */}
@@ -120,7 +81,7 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
             if (msg.sender === "system") {
               return (
                 <div key={msg.id} className="flex justify-center my-2 select-none">
-                  <span className="text-[9px] bg-slate-500/10 dark:bg-white/5 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-md text-center max-w-[85%] leading-normal font-medium border border-slate-200/50 dark:border-slate-800/40">
+                  <span className="text-xs bg-slate-500/10 dark:bg-white/5 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-md text-center max-w-[85%] leading-normal font-medium border border-slate-200/50 dark:border-slate-800/40">
                     {msg.text}
                   </span>
                 </div>
@@ -148,7 +109,7 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
                   {/* Media Handler (Image, etc) */}
                   {msg.mediaUrl && (
                     <div className="mb-2 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/30">
-                      <img
+                      <Image unoptimized width={1000} height={1000}
                         src={msg.mediaUrl}
                         alt="Media Attach"
                         className="w-full h-auto max-h-[140px] object-cover"
@@ -201,13 +162,13 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
                 {msg.buttons && msg.buttons.length > 0 && (
                   <div className="mt-1.5 flex flex-col gap-1 w-[80%] max-w-[85%] self-start animate-scaleIn">
                     {msg.buttons.map((btn) => (
-                      <button
+                      <Button variant="unstyled"
                         key={btn.id}
                         onClick={() => executeSendMessage(btn.title, btn.id)}
                         className="w-full text-center bg-white dark:bg-[#1f2c34] hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 py-2 px-3 rounded-lg text-primary text-xs font-bold transition-all shadow-sm active:scale-98 cursor-pointer"
                       >
-                        {btn.title}
-                      </button>
+                        <span className="truncate block w-full">{btn.title}</span>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -215,13 +176,15 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
                 {/* Interactive List Menus */}
                 {msg.listParams && (
                   <div className="mt-1.5 w-[80%] max-w-[85%] self-start animate-scaleIn">
-                    <button
+                    <Button
                       onClick={() => setActiveListSheet(msg)}
                       className="w-full flex items-center justify-center gap-1.5 bg-white dark:bg-[#1f2c34] hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 py-2.5 px-4 rounded-lg text-primary text-xs font-bold transition-all shadow-sm active:scale-98 cursor-pointer"
                     >
-                      <List size={14} />
-                      {msg.listParams.buttonTitle || "View Options"}
-                    </button>
+                      <List className="shrink-0" size={14} />
+                      <span className="truncate min-w-0">
+                        {msg.listParams.buttonTitle || "View Options"}
+                      </span>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -252,18 +215,18 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                   {activeListSheet.listParams.buttonTitle || "Select Option"}
                 </span>
-                <button
+                <Button variant="unstyled"
                   onClick={() => setActiveListSheet(null)}
                   className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   <X size={16} />
-                </button>
+                </Button>
               </div>
 
               {/* List Items scroll list */}
               <div className="overflow-y-auto p-2 space-y-1">
                 {activeListSheet.listParams.items?.map((item) => (
-                  <button
+                  <Button variant="unstyled"
                     key={item.id}
                     onClick={() => executeSendMessage(item.title, item.id)}
                     className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-[#182229] border-b border-slate-50 dark:border-slate-800/50 flex flex-col transition-all cursor-pointer"
@@ -274,7 +237,7 @@ export const PhoneSimulator: React.FC<PhoneSimulatorProps> = ({
                         {item.description}
                       </span>
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

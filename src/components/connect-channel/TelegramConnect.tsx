@@ -213,26 +213,29 @@ const TelegramConnect = () => {
                     </div>
                   </div>
 
-                  {/* Connection Date */}
-                  {(telegramConn.created_at || telegramConn.createdAt) && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center shrink-0 border border-slate-100 dark:border-slate-800">
-                        <Calendar className="w-4 h-4 text-slate-400 dark:text-gray-500" />
+                  {(() => {
+                    const connectionDate = telegramConn.created_at || telegramConn.createdAt;
+                    if (!connectionDate) return null;
+                    return (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center shrink-0 border border-slate-100 dark:border-slate-800">
+                          <Calendar className="w-4 h-4 text-slate-400 dark:text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Connected On</p>
+                          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
+                            {new Date(connectionDate).toLocaleDateString(undefined, {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Connected On</p>
-                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
-                          {new Date(telegramConn.created_at || telegramConn.createdAt).toLocaleDateString(undefined, {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit"
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>

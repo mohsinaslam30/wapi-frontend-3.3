@@ -3,23 +3,9 @@
 import React from "react";
 import * as LucideIcons from "lucide-react";
 import { Sparkles } from "lucide-react";
+import { FacebookToolsProps } from "@/src/types/channel";
 
-interface Tool {
-  icon: string;
-  title: string;
-  description: string;
-}
 
-interface FacebookToolsProps {
-  toolsSection: {
-    badge?: string;
-    title: string;
-    sub_title?: string;
-    tools: Tool[];
-  };
-  fbGradient: string;
-  fbGradientLight: string;
-}
 
 export default function FacebookTools({ toolsSection, fbGradient, fbGradientLight }: FacebookToolsProps) {
   if (toolsSection.tools.length === 0) return null;

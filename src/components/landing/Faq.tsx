@@ -3,6 +3,8 @@
 import { ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 import { FaqProps } from "../../types/landingPage";
+import { Button } from "@/src/elements/ui/button";
+
 
 const Faq: React.FC<FaqProps> = ({ data }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
@@ -46,7 +48,7 @@ const Faq: React.FC<FaqProps> = ({ data }) => {
                   : "border-slate-200 bg-white hover:border-slate-300"
               }`}
             >
-              <button
+              <Button variant="unstyled"
                 onClick={() => toggleAccordion(index)}
                 className="w-full flex items-center justify-between px-6 py-5 text-left"
               >
@@ -61,7 +63,7 @@ const Faq: React.FC<FaqProps> = ({ data }) => {
                     activeIndex === index ? "rotate-180 text-primary" : "text-slate-400"
                   }`}
                 />
-              </button>
+              </Button>
               
               <div
                 className={`overflow-hidden transition-all duration-300 ${

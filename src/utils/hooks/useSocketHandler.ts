@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { isToday, isYesterday } from "date-fns";
 import { safeFormat, safeParseDate } from "../safeDate";
@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { whatsappApi } from "@/src/redux/api/whatsappApi";
 import { useGetWorkspacesQuery } from "@/src/redux/api/workspaceApi";
 import { setWorkspace } from "@/src/redux/reducers/workspaceSlice";
+import { MessageSquareWarning, AlertTriangle, X } from "lucide-react";
 
 const groupNewMessage = (existingData: DateGroupedMessages[], newMessage: ChatMessage) => {
   let foundExisting = false;
@@ -86,14 +87,17 @@ const groupNewMessage = (existingData: DateGroupedMessages[], newMessage: ChatMe
       const idx = group.messages.findIndex((m) => {
         if (m.id === newMessage.id) return true;
 
-        const isTypeMatch = m.messageType === newMessage.messageType || (m.messageType === "payment_link" && newMessage.messageType === "text");
+        const isTypeMatch =
+          m.messageType === newMessage.messageType ||
+          (m.messageType === "payment_link" && newMessage.messageType === "text") ||
+          (m.messageType === "google_meet" && newMessage.messageType === "text");
 
         if (m.id.startsWith("temp-") && m.direction === newMessage.direction && isTypeMatch) {
           const timeDiff = Math.abs(safeParseDate(m.createdAt).getTime() - safeParseDate(newMessage.createdAt).getTime());
           if (m.messageType === "text" && newMessage.messageType === "text") {
             return m.content === newMessage.content && timeDiff < 60000;
           }
-          if (m.messageType === "payment_link") {
+          if (m.messageType === "payment_link" || m.messageType === "google_meet") {
             return timeDiff < 60000;
           }
           return timeDiff < 60000;
@@ -564,17 +568,173 @@ export const useSocketHandler = () => {
     [dispatch, refetchWorkspaces, selectedWorkspace, user]
   );
 
+  const handleSnoozeReminder = useCallback((data: { contact_id: string, contact_name?: string, contact_number?: string, user_id?: string, message: string, isDanger: boolean, snooze_count: number, timestamp?: string }) => {
+    const isCorrectUser = !data.user_id || data.user_id === user?.id || data.user_id === selectedWorkspace?.user_id;
+    if (!isCorrectUser) return;
+
+    const arrivalTime = new Date(data.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    try {
+      const selectedTone = userSetting?.data?.notification_tone || "default";
+      const toneFile = selectedTone === "default" ? "/assets/sounds/default.mp3" : `/assets/sounds/${selectedTone}.mp3`;
+      const audio = new Audio(toneFile);
+      audio.play().catch(() => {});
+    } catch {}
+
+    const handleClick = (tId: string | number) => {
+      window.focus();
+      router.push(ROUTES.WAChat);
+      if (data.contact_id) {
+        let cachedChat = recentChatsRef.current?.find((c: any) => String(c.contact.id) === String(data.contact_id) || String(c.contact.number) === String(data.contact_id));
+        
+        if (!cachedChat) {
+          cachedChat = {
+            contact: {
+              id: data.contact_id,
+              name: data.contact_name || "Unknown Contact",
+              number: data.contact_number || "",
+              avatar: null,
+              labels: []
+            },
+            lastMessage: {
+              id: "",
+              content: "",
+              messageType: "text",
+              createdAt: new Date().toISOString(),
+              unreadCount: "0"
+            }
+          } as any;
+        }
+        dispatch(selectChat(cachedChat));
+      }
+      toast.dismiss(tId);
+    };
+
+    const CustomToast = ({ tId, isDanger, message }: { tId: string | number, isDanger: boolean, message: string }) => {
+      return React.createElement(
+        "div",
+        {
+          className: `p-4 w-full rounded-xl border shadow-xl overflow-hidden relative ${isDanger ? 'bg-white dark:bg-(--card-color) border-red-200 dark:border-red-900/50' : 'bg-white dark:bg-(--card-color) border-amber-200 dark:border-amber-900/50'}`
+        },
+        React.createElement("div", {
+          className: `absolute top-0 left-0 w-1.5 h-full ${isDanger ? 'bg-red-500' : 'bg-amber-500'}`
+        }),
+        React.createElement(
+          "div",
+          { className: "flex items-start gap-3 pl-1 relative z-10" },
+          React.createElement(
+            "div",
+            {
+              className: `p-2.5 rounded-full mt-0.5 shrink-0 ${isDanger ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`
+            },
+            React.createElement(isDanger ? AlertTriangle : MessageSquareWarning, { size: 22 })
+          ),
+          React.createElement(
+            "div",
+            { className: "flex-1" },
+            React.createElement(
+              "h4",
+              {
+                className: `font-bold text-sm mb-1 ${isDanger ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`
+              },
+              isDanger ? '🚨 Priority Request' : '⏰ Chat Reminder'
+            ),
+            React.createElement(
+              "p",
+              { className: "text-slate-600 dark:text-slate-300 text-sm leading-relaxed mt-2" },
+              message
+            ),
+            React.createElement(
+              "span",
+              { className: "text-[10px] text-slate-400 dark:text-slate-500 block text-right mt-1.5 font-medium" },
+              arrivalTime
+            )
+          ),
+          React.createElement(
+            "div",
+            { className: "absolute top-0 right-0 flex items-center gap-1.5" },
+            React.createElement(
+              "button",
+              {
+                onClick: () => handleClick(tId),
+                className: `px-2.5 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${isDanger ? 'bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-300'}`
+              },
+              "View Chat"
+            ),
+            React.createElement(
+              "button",
+              {
+                onClick: () => toast.dismiss(tId),
+                className: "p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors shrink-0"
+              },
+              React.createElement(X, { size: 16 })
+            )
+          )
+        )
+      );
+    };
+
+    if (data.isDanger) {
+      toast.custom((tId) => React.createElement(CustomToast, { tId, isDanger: true, message: data.message }), {
+        duration: Infinity,
+        position: "top-center",
+      });
+      sendNotification("🚨 Priority Request", { 
+         body: data.message,
+         tag: `snooze-${data.contact_id}`,
+         force: true,
+         onClick: () => handleClick("system-notification")
+      } as any);
+    } else {
+      toast.custom((tId) => React.createElement(CustomToast, { tId, isDanger: false, message: data.message }), {
+        duration: Infinity,
+        position: "top-right",
+      });
+      sendNotification("⏰ Chat Reminder", { 
+         body: data.message,
+         tag: `snooze-${data.contact_id}`,
+         force: true,
+         onClick: () => handleClick("system-notification")
+      } as any);
+    }
+  }, [router, sendNotification, userSetting, dispatch, user, selectedWorkspace]);
+
+  const handleAgentEscalation = useCallback((data: { contact_id: string, user_id?: string, message: string }) => {
+    const isCorrectUser = !data.user_id || data.user_id === user?.id || data.user_id === selectedWorkspace?.user_id;
+    if (!isCorrectUser) return;
+
+    if (data.contact_id) {
+      dispatch(chatApi.util.invalidateTags([{ type: "Chats", id: data.contact_id }]));
+      dispatch(chatApi.util.invalidateTags(["Chats"]));
+
+      toast.info(`Human Handoff`, {
+        description: data.message || "A conversation has been transferred to a human agent.",
+        duration: 5000,
+        position: "top-right",
+        style: {
+          background: "var(--card-color)",
+          color: "var(--foreground)",
+          border: "1px solid var(--border)",
+        },
+      });
+    }
+  }, [dispatch, user, selectedWorkspace]);
+
   useEffect(() => {
     socket.on(SOCKET.Listeners.Whatsapp_Message, handleMessage);
     socket.on(SOCKET.Listeners.Whatsapp_Status, handleStatusUpdate);
     socket.on(SOCKET.Listeners.Whatsapp_Connection_Update, handleConnectionUpdate);
+    socket.on('snooze_reminder', handleSnoozeReminder);
+    socket.on('agent:escalation', handleAgentEscalation);
 
     return () => {
       socket.off(SOCKET.Listeners.Whatsapp_Message, handleMessage);
       socket.off(SOCKET.Listeners.Whatsapp_Status, handleStatusUpdate);
       socket.off(SOCKET.Listeners.Whatsapp_Connection_Update, handleConnectionUpdate);
+      socket.off('snooze_reminder', handleSnoozeReminder);
+      socket.off('agent:escalation', handleAgentEscalation);
     };
-  }, [handleMessage, handleStatusUpdate, handleConnectionUpdate]);
+  }, [handleMessage, handleStatusUpdate, handleConnectionUpdate, handleSnoozeReminder, handleAgentEscalation]);
 
   useEffect(() => {
     return () => {

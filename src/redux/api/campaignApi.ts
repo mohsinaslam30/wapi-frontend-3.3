@@ -9,11 +9,19 @@ export const campaignApi = baseApi.enhanceEndpoints({ addTagTypes: ["Campaign"] 
       }),
       providesTags: ["Campaign"],
     }),
-    getCampaignById: builder.query({
-      query: (id) => ({
-        url: `/campaigns/${id}`,
-      }),
-      providesTags: (result, error, id) => [{ type: "Campaign", id }],
+    getCampaignById: builder.query<any, string | { id: string; params?: any }>({
+      query: (args) => {
+        const id = typeof args === "string" ? args : args.id;
+        const params = typeof args === "string" ? undefined : args.params;
+        return {
+          url: `/campaigns/${id}`,
+          params,
+        };
+      },
+      providesTags: (result, error, args) => {
+        const id = typeof args === "string" ? args : args.id;
+        return [{ type: "Campaign", id }];
+      },
     }),
     createCampaign: builder.mutation({
       query: (data) => ({
@@ -69,6 +77,20 @@ export const campaignApi = baseApi.enhanceEndpoints({ addTagTypes: ["Campaign"] 
       }),
       invalidatesTags: (result, error, id) => ["Campaign", { type: "Campaign", id }],
     }),
+    setupRecurringCampaign: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/campaigns/${id}/setup-recurring`,
+        method: "POST",
+        body
+      }),
+      invalidatesTags: (result, error, { id }) => ["Campaign", { type: "Campaign", id }],
+    }),
+    getCampaignInsights: builder.query({
+      query: (id) => ({
+        url: `/campaigns/${id}/insights`,
+      }),
+      providesTags: (result, error, id) => [{ type: "Campaign", id }],
+    }),
   }),
 });
 
@@ -82,4 +104,6 @@ export const {
   useTogglePauseCampaignMutation,
   useResendCampaignMutation,
   usePublishCampaignMutation,
+  useSetupRecurringCampaignMutation,
+  useGetCampaignInsightsQuery,
 } = campaignApi;

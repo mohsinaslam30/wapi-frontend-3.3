@@ -1,13 +1,10 @@
 import Images from "@/src/shared/Image";
-import { ChatMessage } from "@/src/types/components/chat";
+import { ChatMessage, StickerMessageProps } from "@/src/types/components/chat";
 import { ImageOff } from "lucide-react";
 import React from "react";
 import BaseMessage from "./BaseMessage";
 
-interface StickerMessageProps {
-  message: ChatMessage;
-  isWindowExpired?: boolean;
-}
+
 
 const StickerMessage: React.FC<StickerMessageProps> = ({ message, isWindowExpired }) => {
   return (

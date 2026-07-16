@@ -17,13 +17,9 @@ import { Label } from "@/src/elements/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/elements/ui/select";
 import { Textarea } from "@/src/elements/ui/textarea";
 import { LANGUAGES } from "@/src/data/Languages";
+import { AIAutomationFlowModalProps } from "@/src/types/botFlow";
 
-interface AIAutomationFlowModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  platform: string;
-  onApplyAI: (flowData: any) => void;
-}
+
 
 export default function AIAutomationFlowModal({
   isOpen,
@@ -87,8 +83,8 @@ export default function AIAutomationFlowModal({
 
   return (
     <AlertDialog open={isOpen}>
-      <AlertDialogContent className="sm:max-w-xl max-w-[calc(100%-2rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-0! overflow-hidden border-none">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
+      <AlertDialogContent className="sm:max-w-xl! max-w-[calc(100%-2rem)]! bg-white dark:bg-(--card-color) rounded-lg shadow-2xl p-0! gap-0! overflow-auto no-scrollbar max-h-[90vh] border-none">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-(--card-border-color) bg-slate-50 dark:bg-(--card-color)">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
               <Sparkles size={18} />
@@ -102,17 +98,17 @@ export default function AIAutomationFlowModal({
               </AlertDialogDescription>
             </div>
           </div>
-          <button
+          <Button
             onClick={onClose}
             disabled={isLoading}
-            className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:bg-slate-100 bg-[unset] dark:hover:bg-(--table-hover) rounded-lg transition-colors"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
-        <div className="p-5 max-h-[65vh] overflow-y-auto space-y-4 custom-scrollbar">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="sm:p-5 p-4 max-h-[65vh] overflow-y-auto space-y-4 no-scrollbar">
+          <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Business Name *</Label>
               <Input
@@ -135,16 +131,16 @@ export default function AIAutomationFlowModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Language *</Label>
               <Select value={formData.language} onValueChange={(val) => handleSelectChange("language", val)}>
-                <SelectTrigger className="border-gray-200 dark:border-slate-800 text-sm">
+                <SelectTrigger className="border-gray-200 dark:border-(--card-border-color) text-sm">
                   <SelectValue placeholder="Select Language" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:bg-(--card-color)">
                   {LANGUAGES.map((lang) => (
-                    <SelectItem key={lang.code} value={lang.name}>
+                    <SelectItem className="dark:hover:bg-(--table-hover)" key={lang.code} value={lang.name}>
                       <span className="flex items-center gap-2">
                         <span>{lang.flag}</span>
                         <span>{lang.name}</span>
@@ -157,15 +153,15 @@ export default function AIAutomationFlowModal({
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Tone *</Label>
               <Select value={formData.tone} onValueChange={(val) => handleSelectChange("tone", val)}>
-                <SelectTrigger className="border-gray-200 dark:border-slate-800 text-sm">
+                <SelectTrigger className="border-gray-200 dark:border-(--card-border-color) text-sm">
                   <SelectValue placeholder="Select Tone" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Professional">Professional</SelectItem>
-                  <SelectItem value="Friendly">Friendly</SelectItem>
-                  <SelectItem value="Urgent">Urgent</SelectItem>
-                  <SelectItem value="Humorous">Humorous</SelectItem>
-                  <SelectItem value="Empathetic">Empathetic</SelectItem>
+                <SelectContent className="dark:bg-(--card-color)">
+                  <SelectItem className="dark:hover:bg-(--table-hover)" value="Professional">Professional</SelectItem>
+                  <SelectItem className="dark:hover:bg-(--table-hover)" value="Friendly">Friendly</SelectItem>
+                  <SelectItem className="dark:hover:bg-(--table-hover)" value="Urgent">Urgent</SelectItem>
+                  <SelectItem className="dark:hover:bg-(--table-hover)" value="Humorous">Humorous</SelectItem>
+                  <SelectItem className="dark:hover:bg-(--table-hover)" value="Empathetic">Empathetic</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -216,8 +212,8 @@ export default function AIAutomationFlowModal({
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={isLoading} className="text-sm h-9">
+        <div className="p-4 border-t border-gray-100 dark:border-(--card-border-color) bg-slate-50 dark:bg-(--card-color) flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={isLoading} className="text-sm dark:bg-(--page-body-bg) h-9">
             Cancel
           </Button>
           <Button

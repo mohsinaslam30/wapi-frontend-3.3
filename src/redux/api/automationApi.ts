@@ -12,6 +12,7 @@ export const automationApi = baseApi.enhanceEndpoints({ addTagTypes: ["Automatio
         if (params?.sort_order) queryParams.append("sort_order", params.sort_order);
         if (params?.workspace_id) queryParams.append("workspace_id", params.workspace_id);
         if (params?.status) queryParams.append("status", params.status);
+        if (params?.platform) queryParams.append("platform", params.platform);
         return {
           url: `/automation?${queryParams.toString()}`,
         };

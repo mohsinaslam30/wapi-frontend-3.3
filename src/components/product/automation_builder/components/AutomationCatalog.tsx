@@ -4,24 +4,9 @@ import React, { useState } from "react";
 import * as LucideIcons from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/src/elements/ui/button";
+import { AutomationCatalogProps } from "@/src/types/product";
 
-interface NodeItem {
-  name: string;
-  category: string;
-  type?: string;
-  description: string;
-  icon?: string | React.ReactNode;
-}
 
-interface AutomationCatalogProps {
-  flowNodes: {
-    badge?: string;
-    title?: string;
-    description?: string;
-    nodes: NodeItem[];
-  };
-  primaryColor: string;
-}
 
 const getIconComponent = (iconName?: string) => {
   if (!iconName) return LucideIcons.Sparkles;

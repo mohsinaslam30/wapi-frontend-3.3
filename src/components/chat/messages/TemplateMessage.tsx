@@ -249,7 +249,7 @@ const TemplateMessage: React.FC<TemplateMessageProps> = ({ message, isWindowExpi
               const mediaUrl = header?.media_url || header?.handle || null;
 
               return (
-                <div key={idx} className="shrink-0 w-50 bg-white dark:bg-(--card-color) rounded-lg shadow-md border border-slate-100 dark:border-(--card-border-color) overflow-hidden flex flex-col">
+                <div key={idx} className="shrink-0 w-[260px] bg-white dark:bg-(--card-color) rounded-lg shadow-md border border-slate-100 dark:border-(--card-border-color) overflow-hidden flex flex-col">
                   <div className="h-32 bg-slate-100 dark:bg-(--card-color) flex items-center justify-center text-slate-300 relative overflow-hidden shrink-0">{mediaUrl ? <Images src={mediaUrl} alt={`Card ${idx + 1}`} fill className="object-cover" unoptimized /> : isCarouselProduct ? <ShoppingBag size={32} /> : <BookImage size={32} />}</div>
 
                   <div className="p-3 flex-1 flex flex-col min-h-0 dark:bg-(--dark-body)">

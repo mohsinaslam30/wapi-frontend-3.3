@@ -4,6 +4,8 @@ import { useAppSelector } from "@/src/redux/hooks";
 import { Facebook, Instagram, MessageCircle, MessageSquare, Send, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/src/elements/ui/button";
+
 
 const FloatingWidget = () => {
   const pathname = usePathname();
@@ -39,7 +41,7 @@ const FloatingWidget = () => {
   return (
     <div className="fixed bottom-6 left-6 z-50 flex items-center gap-3 font-sans select-none">
       <div className="relative group">
-        <button
+        <Button variant="unstyled"
           onClick={() => setIsOpen(!isOpen)}
           className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg border ${
             isOpen 
@@ -53,7 +55,7 @@ const FloatingWidget = () => {
           ) : (
             <MessageCircle size={26} className="animate-in fade-in zoom-in duration-300" />
           )}
-        </button>
+        </Button>
         
         {isOpen && (
           <div className="absolute top-full left-0 mt-2 w-max bg-zinc-900/90 backdrop-blur-sm text-[9px] text-zinc-400 py-0.5 px-2 rounded-md shadow-md border border-zinc-800 animate-in fade-in slide-in-from-top-1 duration-300 whitespace-nowrap font-medium">

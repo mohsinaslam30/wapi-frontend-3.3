@@ -14,23 +14,9 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useMemo, useState } from "react";
 import EmbedCodeButton from "./EmbedCodeButton";
 import WidgetInfoBox from "./WidgetInfoBox";
+import { DEFAULTS } from "@/src/data/widget";
 
-const DEFAULTS: Partial<WidgetData> = {
-  welcome_text: "Welcome to our support! \n\nThank you for reaching out to us on WhatsApp.",
-  default_open_popup: false,
-  default_user_message: "Hi, I need help !!",
-  widget_position: "bottom-right",
-  widget_color: "#059669",
-  header_text: "Chat with us",
-  header_text_color: "#fff",
-  header_background_color: "#059669",
-  body_background_color: "#f3ebe2ff",
-  welcome_text_color: "#94a3b8",
-  welcome_text_background: "#fff",
-  start_chat_button_text: "Start Chat on WhatsApp",
-  start_chat_button_background: "#059669",
-  start_chat_button_text_color: "#fff",
-};
+
 
 function normalizeServerData(data: Partial<WidgetData> & { widget_image_url?: string }): Partial<WidgetData> {
   const result = { ...data };

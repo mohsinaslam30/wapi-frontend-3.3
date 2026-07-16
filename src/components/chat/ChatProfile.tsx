@@ -13,7 +13,10 @@ import {
   useDeleteChatTagMutation,
   useGetContactProfileQuery,
   useUnassignAgentMutation,
+  useAssignChatbotMutation,
+  useUnassignChatbotMutation,
 } from "@/src/redux/api/chatApi";
+import { useGetChatbotsQuery } from "@/src/redux/api/chatbotApi";
 import { useDeleteContactMutation } from "@/src/redux/api/contactApi";
 import { useCreateTagMutation } from "@/src/redux/api/tagsApi";
 import {
@@ -37,6 +40,7 @@ import { toast } from "sonner";
 import TagModal from "../tags/TagModal";
 import ProfileAssignAgent from "./profile/ProfileAssignAgent";
 import ProfileAssignAICallAgent from "./profile/ProfileAssignAICallAgent";
+import ProfileAssignChatbot from "./profile/ProfileAssignChatbot";
 import ProfileChatNote from "./profile/ProfileChatNote";
 import ProfileClearChat from "./profile/ProfileClearChat";
 import ProfileContactSummary from "./profile/ProfileContactSummary";
@@ -83,6 +87,11 @@ const ChatProfile = () => {
   );
   const agents = agentsData?.data?.agents || [];
   const aiAgents = aiAgentsData?.data || [];
+  const { data: chatbotsResult } = useGetChatbotsQuery(
+    { waba_id: selectedPhoneNumberId as string },
+    { skip: !selectedPhoneNumberId }
+  );
+  const chatbots = chatbotsResult?.data || [];
   const { user } = useAppSelector((state) => state.auth);
   const isAgent = user?.role === "agent";
 
@@ -102,6 +111,10 @@ const ChatProfile = () => {
     useAssignAgentToContactMutation();
   const [removeAIAgent, { isLoading: isRemovingAIAgent }] =
     useRemoveAgentFromContactMutation();
+  const [assignChatbot, { isLoading: isAssigningChatbot }] =
+    useAssignChatbotMutation();
+  const [unassignChatbot, { isLoading: isUnassigningChatbot }] =
+    useUnassignChatbotMutation();
 
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [isDeletingContactModalOpen, setIsDeletingContactModalOpen] =
@@ -160,8 +173,7 @@ const ChatProfile = () => {
         contact_id: contactId as string,
         whatsapp_phone_number_id: selectedPhoneNumberId as string,
       }).unwrap();
-      const result = await refetchProfile();
-      console.log(result.data);
+      await refetchProfile();
       toast.success("Agent unassigned successfully");
     } catch {
       toast.error("Failed to unassign agent");
@@ -186,6 +198,29 @@ const ChatProfile = () => {
       toast.success("AI Call Agent removed successfully");
     } catch {
       toast.error("Failed to remove AI Call Agent");
+    }
+  };
+
+  const handleAssignChatbot = async (chatbotId: string) => {
+    try {
+      await assignChatbot({
+        contact_id: contactId as string,
+        chatbot_id: chatbotId,
+      }).unwrap();
+      toast.success(t("chatbot_assigned_success", { defaultValue: "Chatbot assigned successfully" }));
+    } catch {
+      toast.error(t("failed_to_assign_chatbot", { defaultValue: "Failed to assign chatbot" }));
+    }
+  };
+
+  const handleUnassignChatbot = async () => {
+    try {
+      await unassignChatbot({
+        contact_id: contactId as string,
+      }).unwrap();
+      toast.success(t("chatbot_unassigned_success", { defaultValue: "Chatbot unassigned successfully" }));
+    } catch {
+      toast.error(t("failed_to_unassign_chatbot", { defaultValue: "Failed to unassign chatbot" }));
     }
   };
 
@@ -262,12 +297,12 @@ const ChatProfile = () => {
         contact_id: contactId as string,
         connection_id: selectedPhoneNumberId as string,
       }).unwrap();
-      toast.success("Chat history cleared successfully");
+      toast.success(t("chat_history_cleared_success", { defaultValue: "Chat history cleared successfully" }));
     } catch (error: any) {
       toast.error(
         error?.data?.message ||
           error?.data?.error ||
-          "Failed to clear chat history",
+          t("failed_to_clear_chat_history", { defaultValue: "Failed to clear chat history" }),
       );
     }
   };
@@ -368,7 +403,8 @@ const ChatProfile = () => {
             )}
           </PlanFeature>
 
-          <PlanFeature feature="whatsapp_calling">
+          {selectedWorkspace?.waba_type !== "baileys" &&
+            <PlanFeature feature="whatsapp_calling">
             {!isAgent && isWhatsApp && (
               <ProfileAssignAICallAgent
                 agents={aiAgents}
@@ -385,6 +421,27 @@ const ChatProfile = () => {
               />
             )}
           </PlanFeature>
+            }
+
+          {!isAgent && (
+            <ProfileAssignChatbot
+              chatbots={chatbots}
+              selectedChatbotId={
+                profileData?.assigned_chatbot?._id ||
+                profileData?.assigned_chatbot ||
+                profileData?.contact?.assigned_chatbot?._id ||
+                profileData?.contact?.assigned_chatbot
+              }
+              assignedChatbot={
+                profileData?.assigned_chatbot ||
+                profileData?.contact?.assigned_chatbot
+              }
+              onAssign={handleAssignChatbot}
+              onUnassign={handleUnassignChatbot}
+              isLoading={isAssigningChatbot}
+              isUnassigning={isUnassigningChatbot}
+            />
+          )}
 
           <ProfileChatNote
             notes={profileData?.notes || []}

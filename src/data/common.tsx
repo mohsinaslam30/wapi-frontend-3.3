@@ -1,19 +1,5 @@
-export interface InfoContent {
-  label: string;
-  value: string;
-  subContent?: InfoContent[];
-}
+import { InfoModalItem } from "../types/common";
 
-export interface InfoModalItem {
-  title: string;
-  description: string;
-  content: InfoContent[];
-  externalLink?: {
-    label: string;
-    url: string;
-    description: string;
-  };
-}
 
 export const INFOMODALDATE: Record<string, InfoModalItem> = {
   webhook_configuration: {

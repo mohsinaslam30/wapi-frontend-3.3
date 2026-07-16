@@ -1,22 +1,26 @@
 "use client";
 
 import { Button } from "@/src/elements/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/elements/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/elements/ui/dialog";
 import { Input } from "@/src/elements/ui/input";
 import { useCreateAttachmentMutation } from "@/src/redux/api/mediaApi";
-import { MediaUploadModalPropsData } from "@/src/types/media";
-import { CloudUpload, Loader2, X, Plus, Trash2 } from "lucide-react";
+import { FileItem, MediaUploadModalPropsData } from "@/src/types/media";
+import { CloudUpload, Loader2, Plus, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-interface FileItem {
-  file: File;
-  previewUrl: string;
-}
-
-const MediaUploadModal: React.FC<MediaUploadModalPropsData> = ({ isOpen, onClose, onUploadSuccess }) => {
+const MediaUploadModal: React.FC<MediaUploadModalPropsData> = ({
+  isOpen,
+  onClose,
+  onUploadSuccess,
+}) => {
   const { t } = useTranslation();
   const [files, setFiles] = useState<FileItem[]>([]);
   const [createAttachment, { isLoading }] = useCreateAttachmentMutation();
@@ -120,10 +124,16 @@ const MediaUploadModal: React.FC<MediaUploadModalPropsData> = ({ isOpen, onClose
               <CloudUpload size={48} className="text-primary" />
             </div>
 
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">{t("drag_and_drop")}</h3>
-            <p className="text-xs text-gray-400 text-center mt-1">{t("max_size_note")}</p>
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              {t("drag_and_drop")}
+            </h3>
+            <p className="text-xs text-gray-400 text-center mt-1">
+              {t("max_size_note")}
+            </p>
             <p className="text-sm text-gray-500 my-2">{t("or_separator")}</p>
-            <p className="text-sm text-gray-600 font-medium text-center dark:text-gray-400">{t("click_to_browse")}</p>
+            <p className="text-sm text-gray-600 font-medium text-center dark:text-gray-400">
+              {t("click_to_browse")}
+            </p>
 
             <Input
               type="file"
@@ -144,7 +154,8 @@ const MediaUploadModal: React.FC<MediaUploadModalPropsData> = ({ isOpen, onClose
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded overflow-hidden shrink-0 flex items-center justify-center relative">
-                      {fileObj.previewUrl && fileObj.file.type.startsWith("image/") ? (
+                      {fileObj.previewUrl &&
+                      fileObj.file.type.startsWith("image/") ? (
                         <Image
                           src={fileObj.previewUrl}
                           alt="Preview"
@@ -213,7 +224,11 @@ const MediaUploadModal: React.FC<MediaUploadModalPropsData> = ({ isOpen, onClose
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button className="bg-primary text-white w-full h-10 font-bold" onClick={handleUpload} disabled={isLoading}>
+              <Button
+                className="bg-primary text-white w-full h-10 font-bold"
+                onClick={handleUpload}
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />

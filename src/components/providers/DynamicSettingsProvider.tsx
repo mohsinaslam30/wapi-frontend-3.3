@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
-import { useGetSettingsQuery } from "@/src/redux/api/settingsApi";
+import { ROUTES } from "@/src/constants";
+import { DEFAULT_FAVICON } from "@/src/data/product";
 import { useGetAuthPageSetupQuery } from "@/src/redux/api/authApi";
+import { useGetSettingsQuery } from "@/src/redux/api/settingsApi";
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
 import { setAuthPageSetup, setSetting } from "@/src/redux/reducers/settingSlice";
-import { usePathname, useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
-import { ROUTES } from "@/src/constants";
-import { useTranslation } from "react-i18next";
+import { DynamicSettingsProviderProps } from "@/src/types/product";
 import { getUrlWithBasePath } from "@/src/utils";
+import { useTheme } from "next-themes";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const API_URL = process.env.NEXT_PUBLIC_STORAGE_URL ?? "";
 
@@ -38,7 +40,7 @@ const resolveUrl = (url?: string): string => {
   return getUrlWithBasePath(`/${normalizedUrl}`);
 };
 
-const DEFAULT_FAVICON = "/assets/logos/sidebarLogo.png";
+
 
 function applyFavicon(href: string) {
   if (typeof window === "undefined" || !href) return;
@@ -85,9 +87,6 @@ function applyFavicon(href: string) {
   }
 }
 
-interface DynamicSettingsProviderProps {
-  children: ReactNode;
-}
 
 const DynamicSettingsProvider = ({ children }: DynamicSettingsProviderProps) => {
   const dispatch = useAppDispatch();

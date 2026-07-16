@@ -43,6 +43,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, onImageClick, isWind
     case "order":
       return <OrderMessage message={message} isWindowExpired={isWindowExpired} />;
     case "payment_link":
+    case "google_meet":
       return <TextMessage message={message} isWindowExpired={isWindowExpired} />;
     case "system_messages":
       return <SystemMessage message={message} />;

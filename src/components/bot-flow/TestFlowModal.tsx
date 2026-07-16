@@ -1,37 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogDescription,
 } from "@/src/elements/ui/alert-dialog";
 import { Button } from "@/src/elements/ui/button";
-import { X, Send, MessageSquare, Facebook, Instagram } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 import { useTestAutomationFlowMutation } from "@/src/redux/api/automationApi";
 import { useAppSelector } from "@/src/redux/hooks";
+import { Facebook, Instagram, MessageSquare, Send, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/src/lib/utils";
 
-import { KeywordHints } from "./KeywordHints";
+import { validMessageTypes } from "@/src/data/botFlow";
+import { ChatMessage, TestFlowModalProps } from "@/src/types/botFlow";
 import { ExecutionLogs } from "./ExecutionLogs";
-import { PhoneSimulator, ChatMessage } from "./PhoneSimulator";
-
-interface TestFlowModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  flowId: string;
-  flowName: string;
-  platform: string;
-  getUnsavedFlowPayload: () => {
-    triggers: any[];
-    nodes: any[];
-    connections: any[];
-  };
-}
+import { KeywordHints } from "./KeywordHints";
+import { PhoneSimulator } from "./PhoneSimulator";
 
 export default function TestFlowModal({
   isOpen,
@@ -45,7 +34,9 @@ export default function TestFlowModal({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [activeListSheet, setActiveListSheet] = useState<ChatMessage | null>(null);
+  const [activeListSheet, setActiveListSheet] = useState<ChatMessage | null>(
+    null,
+  );
   const [executionLogs, setExecutionLogs] = useState<any[]>([]);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -69,7 +60,10 @@ export default function TestFlowModal({
         id: "welcome",
         sender: "system",
         text: "Simulator ready. Type a trigger keyword (e.g., 'start') to test your automation.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       },
     ]);
     setExecutionLogs([]);
@@ -102,7 +96,10 @@ export default function TestFlowModal({
       id: `user-${Date.now()}`,
       sender: "user",
       text: text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -133,7 +130,13 @@ export default function TestFlowModal({
           setExecutionLogs((prev) => {
             const combined = [...prev, ...data.executionLog];
             // Remove duplicates
-            return combined.filter((v, i, a) => a.findIndex((t) => t.node_id === v.node_id && t.start_time === v.start_time) === i);
+            return combined.filter(
+              (v, i, a) =>
+                a.findIndex(
+                  (t) =>
+                    t.node_id === v.node_id && t.start_time === v.start_time,
+                ) === i,
+            );
           });
         }
 
@@ -144,13 +147,17 @@ export default function TestFlowModal({
               id: `system-fail-${Date.now()}`,
               sender: "system",
               text: "No triggers matched your message. Try typing a trigger keyword.",
-              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
             },
           ]);
           return;
         }
 
-        const responses = data.output?.test_responses || data.test_responses || [];
+        const responses =
+          data.output?.test_responses || data.test_responses || [];
         if (responses.length === 0) {
           return;
         }
@@ -160,95 +167,119 @@ export default function TestFlowModal({
           for (let i = 0; i < responses.length; i++) {
             const resp = responses[i];
 
-            if (resp.type === 'delay') {
+            if (resp.type === "delay") {
               // Backend recorded a Wait Timer node, simulate the wait
-              await new Promise(resolve => setTimeout(resolve, resp.delay_ms || 1000));
+              await new Promise((resolve) =>
+                setTimeout(resolve, resp.delay_ms || 1000),
+              );
               continue;
             }
 
-            const validMessageTypes = ['send_message', 'send_template', 'form_flow', 'cta_button', 'location', 'list_message', 'button_message'];
-            
             let isSystemMessage = false;
             let systemText = "";
 
             if (!validMessageTypes.includes(resp.type)) {
-               isSystemMessage = true;
-               switch (resp.type) {
-                 case "assign_agent":
-                 case "assign_random_agent":
-                   systemText = "Agent assigned";
-                   break;
-                 case "add_tag":
-                   systemText = `Tag added${resp.tag_name ? ': ' + resp.tag_name : ''}`;
-                   break;
-                 case "remove_tag":
-                   systemText = "Tag removed";
-                   break;
-                 case "update_contact":
-                   systemText = "Contact updated";
-                   break;
-                 case "add_to_segment":
-                   systemText = "Added to segment";
-                   break;
-                 case "save_to_google_sheet":
-                   systemText = "Saved to Google Sheet";
-                   break;
-                 case "create_calendar_event":
-                   systemText = "Calendar event created";
-                   break;
-                 case "assign_chatbot":
-                   systemText = "Chatbot assigned";
-                   break;
-                 case "webhook":
-                 case "api":
-                   systemText = "API/Webhook triggered";
-                   break;
-                 case "response_saver":
-                   systemText = "Response saved";
-                   break;
-                 case "send_sequence":
-                   systemText = "Sequence triggered";
-                   break;
-                 case "appointment_flow":
-                   systemText = "Appointment flow started";
-                   break;
-                 case "custom":
-                   systemText = "Custom logic executed";
-                   break;
-                 default:
-                   continue; 
-               }
+              isSystemMessage = true;
+              switch (resp.type) {
+                case "assign_agent":
+                case "assign_random_agent":
+                  systemText = "Agent assigned";
+                  break;
+                case "add_tag":
+                  systemText = `Tag added${resp.tag_name ? ": " + resp.tag_name : ""}`;
+                  break;
+                case "remove_tag":
+                  systemText = "Tag removed";
+                  break;
+                case "update_contact":
+                  systemText = "Contact updated";
+                  break;
+                case "move_to_pipeline_stage":
+                  systemText = `Moved to Pipeline Stage`;
+                  break;
+                case "add_to_segment":
+                  systemText = "Added to segment";
+                  break;
+                case "save_to_google_sheet":
+                  systemText = "Saved to Google Sheet";
+                  break;
+                case "create_calendar_event":
+                  systemText = "Calendar event created";
+                  break;
+                case "create_google_meet":
+                  systemText = "Google Meet created";
+                  break;
+                case "assign_chatbot":
+                  systemText = "Chatbot assigned";
+                  break;
+                case "webhook":
+                case "api":
+                  systemText = "API/Webhook triggered";
+                  break;
+                case "response_saver":
+                  systemText = "Response saved";
+                  break;
+                case "send_sequence":
+                  systemText = "Sequence triggered";
+                  break;
+                case "appointment_flow":
+                  systemText = "Appointment flow started";
+                  break;
+                case "custom":
+                  systemText = "Custom logic executed";
+                  break;
+                default:
+                  continue;
+              }
             }
 
-            await new Promise(resolve => setTimeout(resolve, isSystemMessage ? 200 : 600));
+            await new Promise((resolve) =>
+              setTimeout(resolve, isSystemMessage ? 200 : 600),
+            );
 
             if (isSystemMessage) {
-               setMessages((prev) => [...prev, {
-                 id: `sys-${Date.now()}-${i}`,
-                 sender: "system",
-                 text: systemText,
-                 timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-               }]);
-               continue;
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: `sys-${Date.now()}-${i}`,
+                  sender: "system",
+                  text: systemText,
+                  timestamp: new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                },
+              ]);
+              continue;
             }
 
             const params = resp.messageParams || {};
-            
+
             // Fallback for cases where backend missed messageParams
-            const textToRender = params.messageText || resp.message || resp.text || "";
+            const textToRender =
+              params.messageText || resp.message || resp.text || "";
             const mediaUrlToRender = params.mediaUrl || resp.mediaUrl;
             const buttonsToRender = params.buttonParams || params.buttons;
-            
+
             // Skip empty messages if somehow still no content
-            if (!textToRender && !mediaUrlToRender && !buttonsToRender && !params.locationParams && !params.listParams) {
-               continue;
+            if (
+              !textToRender &&
+              !mediaUrlToRender &&
+              !buttonsToRender &&
+              !params.locationParams &&
+              !params.listParams
+            ) {
+              continue;
             }
 
             const botMsg: ChatMessage = {
               id: `bot-${Date.now()}-${i}`,
               sender: "bot",
               text: textToRender,
-              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
               messageType: params.messageType || resp.type,
               mediaUrl: mediaUrlToRender,
               buttons: buttonsToRender,
@@ -302,7 +333,8 @@ export default function TestFlowModal({
           color: "bg-[#059669]",
           icon: <MessageSquare size={14} className="text-white" />,
           avatarColor: "bg-emerald-500",
-          userBubbleColor: "bg-[#e2f7cb] dark:bg-emerald-900 text-gray-800 dark:text-gray-100",
+          userBubbleColor:
+            "bg-[#e2f7cb] dark:bg-emerald-900 text-gray-800 dark:text-gray-100",
         };
     }
   }, [platform]);
@@ -314,8 +346,14 @@ export default function TestFlowModal({
     // 1. Extract from standard triggers
     if (unsavedFlow.triggers && Array.isArray(unsavedFlow.triggers)) {
       unsavedFlow.triggers.forEach((t: any) => {
-        if (t.conditions?.operator === "contains_any" || t.conditions?.operator === "equals" || t.conditions?.operator === "contains") {
-          const vals = Array.isArray(t.conditions.value) ? t.conditions.value : [t.conditions.value];
+        if (
+          t.conditions?.operator === "contains_any" ||
+          t.conditions?.operator === "equals" ||
+          t.conditions?.operator === "contains"
+        ) {
+          const vals = Array.isArray(t.conditions.value)
+            ? t.conditions.value
+            : [t.conditions.value];
           keywords = [...keywords, ...vals];
         }
       });
@@ -323,63 +361,76 @@ export default function TestFlowModal({
 
     // 2. Extract from logic control (condition) nodes
     if (unsavedFlow.nodes && Array.isArray(unsavedFlow.nodes)) {
-      unsavedFlow.nodes.filter((n: any) => n.type === "condition").forEach((n: any) => {
-        const params = n.parameters || {};
-        
-        // Handle array of condition rules
-        if (Array.isArray(params.conditions)) {
-          params.conditions.forEach((c: any) => {
-            if (c.operator === "contains_any" || c.operator === "equals" || c.operator === "contains") {
+      unsavedFlow.nodes
+        .filter((n: any) => n.type === "condition")
+        .forEach((n: any) => {
+          const params = n.parameters || {};
+
+          // Handle array of condition rules
+          if (Array.isArray(params.conditions)) {
+            params.conditions.forEach((c: any) => {
+              if (
+                c.operator === "contains_any" ||
+                c.operator === "equals" ||
+                c.operator === "contains"
+              ) {
+                const vals = Array.isArray(c.value) ? c.value : [c.value];
+                keywords = [...keywords, ...vals];
+              }
+            });
+          }
+
+          // Handle single condition rule
+          if (params.condition) {
+            const c = params.condition;
+            if (
+              c.operator === "contains_any" ||
+              c.operator === "equals" ||
+              c.operator === "contains"
+            ) {
               const vals = Array.isArray(c.value) ? c.value : [c.value];
               keywords = [...keywords, ...vals];
             }
-          });
-        }
-        
-        // Handle single condition rule
-        if (params.condition) {
-          const c = params.condition;
-          if (c.operator === "contains_any" || c.operator === "equals" || c.operator === "contains") {
-            const vals = Array.isArray(c.value) ? c.value : [c.value];
-            keywords = [...keywords, ...vals];
           }
-        }
-      });
+        });
     }
 
     return Array.from(
       new Set(
-        keywords.filter((kw: string) => kw && typeof kw === "string" && !kw.includes("___"))
-      )
+        keywords.filter(
+          (kw: string) => kw && typeof kw === "string" && !kw.includes("___"),
+        ),
+      ),
     );
   }, [getUnsavedFlowPayload]);
 
   return (
     <AlertDialog open={isOpen}>
-      <AlertDialogContent className="sm:max-w-5xl! max-w-[calc(100%-2rem)]! gap-0! border-none p-0! overflow-hidden bg-slate-50 dark:bg-[#0f172a] rounded-2xl shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[80vh]">
+      <AlertDialogContent className="sm:max-w-5xl! max-w-[calc(100%-2rem)]! gap-0! border-none p-0! overflow-auto bg-slate-50 dark:bg-(--card-color) rounded-lg shadow-2xl flex flex-col md:flex-row max-h-[90vh] no-scrollbar">
         {/* Left Side: Instructions & Execution Logs */}
-        <div className="flex-1 p-6 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between overflow-y-auto bg-white dark:bg-slate-900 md:max-w-lg">
+        <div className="w-full md:flex-1 sm:p-6 p-4 border-b md:border-b-0 md:border-r border-slate-200 dark:border-(--card-border-color) flex flex-col justify-between md:overflow-y-auto bg-white no-scrollbar dark:bg-(--card-color) md:max-w-lg shrink-0">
           <div className="space-y-6">
             <div>
-              <AlertDialogHeader className="text-left rtl:text-right">
-                <div className="flex items-center justify-between">
+              <AlertDialogHeader className="text-left rtl:text-right place-items-start">
+                <div className="flex items-center justify-between w-full text-left rtl:text-right">
                   <div className="flex items-center gap-2">
                     <div className={cn("p-1.5 rounded-lg", pDetails.color)}>
                       {pDetails.icon}
                     </div>
-                    <AlertDialogTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <AlertDialogTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-white text-left rtl:text-right">
                       Test Flow: {flowName}
                     </AlertDialogTitle>
                   </div>
-                  <button
+                  <Button variant="unstyled"
                     onClick={onClose}
                     className="p-1.5 md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                   >
                     <X size={20} />
-                  </button>
+                  </Button>
                 </div>
-                <AlertDialogDescription className="text-slate-500 dark:text-slate-400 text-xs mt-1.5">
-                  Simulate client-side interactions. Sending keyword triggers or selecting button options will run the flow logic in real-time.
+                <AlertDialogDescription className="text-slate-500 dark:text-slate-200 text-sm mt-1.5 text-left rtl:text-right">
+                  Simulate client-side interactions. Sending keyword triggers or
+                  selecting button options will run the flow logic in real-time.
                 </AlertDialogDescription>
               </AlertDialogHeader>
             </div>
@@ -395,21 +446,25 @@ export default function TestFlowModal({
           </div>
 
           <div className="hidden md:flex pt-4">
-            <Button variant="outline" className="w-full justify-center gap-2 text-xs" onClick={onClose}>
+            <Button
+              variant="outline"
+              className="w-full justify-center gap-2 text-xs"
+              onClick={onClose}
+            >
               <X size={14} /> Close Simulator
             </Button>
           </div>
         </div>
 
         {/* Right Side: Phone Simulator View */}
-        <div className="flex-1 bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4 relative h-full">
+        <div className="w-full md:flex-1 bg-slate-100 dark:bg-(--card-color) flex items-center justify-center p-4 sm:p-6 relative md:h-full min-h-[600px] md:min-h-0 shrink-0">
           {/* Close button for Desktop */}
-          <button
+          <Button variant="unstyled"
             onClick={onClose}
-            className="absolute top-4 right-4 hidden md:block p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            className="absolute top-4 right-4 rtl:right-[unset] rtl:left-4 hidden md:block p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors z-50"
           >
             <X size={24} />
-          </button>
+          </Button>
 
           {/* Realistic iPhone mockup frame */}
           <PhoneSimulator
