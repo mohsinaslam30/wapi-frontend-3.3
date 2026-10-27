@@ -30,11 +30,11 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   env: {
-    NEXT_PUBLIC_API_URL: "https://crm.whatscloud.shop/api",
+    NEXT_PUBLIC_API_URL: "https://crm.cloudads.shop/api",
     NEXT_PUBLIC_API_BASE_URL: (process.env.NEXT_PUBLIC_BASE_PATH || "") + "/api",
-    NEXT_PUBLIC_STORAGE_URL: "https://crm.whatscloud.shop",
-    NEXT_PUBLIC_ADMIN_URL: "https://admin.whatscloud.shop",
-    NEXT_PUBLIC_FRONT_URL: "https://whatscloud.shop",
+    NEXT_PUBLIC_STORAGE_URL: "https://crm.cloudads.shop",
+    NEXT_PUBLIC_ADMIN_URL: "https://admin.cloudads.shop",
+    NEXT_PUBLIC_FRONT_URL: "https://cloudads.shop",
   },
   images: {
     remotePatterns: [
@@ -48,7 +48,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "crm.whatscloud.shop",
+        hostname: "crm.cloudads.shop",
       },
     ],
   },
