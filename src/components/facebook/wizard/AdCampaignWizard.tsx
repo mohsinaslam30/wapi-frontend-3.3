@@ -568,11 +568,12 @@ const AdCampaignWizard: React.FC<AdCampaignWizardProps> = ({
             formData.append(fileField, firstAd.local_file);
             formData.append("ad_sets", JSON.stringify(values.ad_sets));
 
-            await createCampaign(formData).unwrap();
+            const res: any = await createCampaign(formData).unwrap();
+            toast.success(res?.message || t("campaign_created_successfully"));
           } else {
-            await createCampaign(values).unwrap();
+            const res: any = await createCampaign(values).unwrap();
+            toast.success(res?.message || t("campaign_created_successfully"));
           }
-          toast.success(t("campaign_created_successfully"));
           router.push(`${ROUTES.FacebookAccount}/campaigns/${adAccountId}`);
         } else if (isAdSetMode) {
           const adSetPayload = {
