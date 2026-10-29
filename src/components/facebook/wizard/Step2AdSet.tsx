@@ -7,7 +7,7 @@ import { Input } from "@/src/elements/ui/input";
 import { Label } from "@/src/elements/ui/label";
 import { cn } from "@/src/lib/utils";
 import { useFormikContext } from "formik";
-import { Settings } from "lucide-react";
+import { Calendar, Clock, Settings } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import GeoLocationSelector from "./GeoLocationSelector";
@@ -218,6 +218,60 @@ export const Step2AdSet: React.FC = () => {
                   </Label>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Ad Scheduling & Expiry Section */}
+        <div className="pt-6 sm:pt-8 border-t border-slate-200/60 dark:border-(--card-border-color) space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Calendar size={18} />
+            <h3 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+              {t("ad_schedule", "Ad Scheduling & Expiry")}
+            </h3>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t(
+              "ad_schedule_desc",
+              "Set the exact start date & time and expiration date & time for this ad.",
+            )}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-1">
+            <div className="space-y-2">
+              <Label
+                htmlFor="start_time"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                {t("start_date_time", "Start Date & Time")}
+              </Label>
+              <Input
+                id="start_time"
+                type="datetime-local"
+                value={values?.ad_sets?.[0]?.start_time || ""}
+                onChange={(e) =>
+                  setFieldValue("ad_sets[0].start_time", e.target.value)
+                }
+                className="h-10 sm:h-11 bg-white dark:bg-(--page-body-bg) border-slate-200 dark:border-slate-800 text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="end_time"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                {t("expiry_date_time", "Expiry / End Date & Time")}
+              </Label>
+              <Input
+                id="end_time"
+                type="datetime-local"
+                value={values?.ad_sets?.[0]?.end_time || ""}
+                onChange={(e) =>
+                  setFieldValue("ad_sets[0].end_time", e.target.value)
+                }
+                className="h-10 sm:h-11 bg-white dark:bg-(--page-body-bg) border-slate-200 dark:border-slate-800 text-sm"
+              />
             </div>
           </div>
         </div>

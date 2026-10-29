@@ -43,7 +43,7 @@ const validationSchema = [
     objective: Yup.string().required("Objective is required"),
     daily_budget: Yup.number()
       .required("Budget is required")
-      .min(100, "Minimum budget is 100"),
+      .min(1, "Minimum budget is 1"),
   }),
   Yup.object().shape({
     ad_sets: Yup.array().of(
@@ -358,6 +358,7 @@ const AdCampaignWizard: React.FC<AdCampaignWizardProps> = ({
 
       return {
         ad_account_id: effectiveAdAccountId,
+        fb_page_id: d.fb_page_id || "",
         name: d.name,
         objective: d.objective,
         daily_budget: d.daily_budget,
@@ -371,9 +372,10 @@ const AdCampaignWizard: React.FC<AdCampaignWizardProps> = ({
 
     return {
       ad_account_id: effectiveAdAccountId,
+      fb_page_id: "",
       name: "",
       objective: "OUTCOME_TRAFFIC",
-      daily_budget: 100,
+      daily_budget: 1,
       is_cbo: true,
       ad_sets: [
         {
@@ -381,6 +383,8 @@ const AdCampaignWizard: React.FC<AdCampaignWizardProps> = ({
           name: "",
           billing_event: "IMPRESSIONS",
           optimization_goal: "REACH",
+          start_time: "",
+          end_time: "",
           targeting: {
             geo_locations: { countries: ["US"] },
             genders: [1, 2],
@@ -551,6 +555,9 @@ const AdCampaignWizard: React.FC<AdCampaignWizardProps> = ({
           if (firstAd?.local_file) {
             const formData = new FormData();
             formData.append("ad_account_id", values.ad_account_id);
+            if (values.fb_page_id) {
+              formData.append("fb_page_id", values.fb_page_id);
+            }
             formData.append("name", values.name);
             formData.append("objective", values.objective);
             formData.append("daily_budget", values.daily_budget);
@@ -641,10 +648,15 @@ const AdCampaignWizard: React.FC<AdCampaignWizardProps> = ({
           router.push(`${ROUTES.FacebookAccount}/ads/${adsetId}`);
         }
       } catch (err: any) {
-        toast.error(
+        console.error("Ad creation error:", err);
+        const metaError =
+          err?.data?.fb_error?.user_msg ||
+          err?.data?.fb_error?.message ||
+          err?.data?.details ||
           err?.data?.error ||
-            t("failed_to_process_request", "Failed to process request"),
-        );
+          err?.message ||
+          t("failed_to_process_request", "Failed to process request");
+        toast.error(metaError, { duration: 8000 });
       }
     }
   };

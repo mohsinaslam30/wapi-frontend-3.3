@@ -325,6 +325,21 @@ export const getAdSetColumns = (t: any, router: AppRouterInstance, onDelete: (id
     ),
   },
   {
+    header: t("schedule", "Schedule"),
+    className: "min-w-[180px] [@media(max-width:1199px)]:min-w-[200px]",
+    accessorKey: "start_time",
+    cell: (item) => (
+      <div className="flex flex-col text-xs">
+        <span className="font-semibold text-slate-700 dark:text-slate-300">
+          {item.start_time ? `Start: ${formatDateTime(item.start_time)}` : "Immediate"}
+        </span>
+        <span className="text-[10px] text-slate-400">
+          {item.end_time ? `Expires: ${formatDateTime(item.end_time)}` : "No Expiry"}
+        </span>
+      </div>
+    ),
+  },
+  {
     header: t("actions"),
     className: "w-[240px] [@media(max-width:1199px)]:min-w-[320px]",
     accessorKey: "actions",

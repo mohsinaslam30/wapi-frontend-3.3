@@ -13,9 +13,10 @@ import {
 } from "@/src/elements/ui/select";
 import { useFeatureAccess } from "@/src/hooks/useFeatureAccess";
 import { cn } from "@/src/lib/utils";
+import { useGetFacebookPagesQuery } from "@/src/redux/api/facebookApi";
 import { useFormikContext } from "formik";
 import { Info } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const Step1Campaign: React.FC = () => {
@@ -23,6 +24,20 @@ const Step1Campaign: React.FC = () => {
   const { isFeatureEnabled } = useFeatureAccess();
   const { values, errors, touched, setFieldValue, handleBlur } =
     useFormikContext<any>();
+
+  const { data: pagesData, isLoading: isLoadingPages } =
+    useGetFacebookPagesQuery({ limit: 100 });
+  const facebookPages = pagesData?.data || [];
+
+  useEffect(() => {
+    if (!values?.fb_page_id && facebookPages.length > 0) {
+      const defaultPage =
+        facebookPages.find((p: any) => p.is_default) || facebookPages[0];
+      if (defaultPage) {
+        setFieldValue("fb_page_id", defaultPage._id);
+      }
+    }
+  }, [facebookPages, values?.fb_page_id, setFieldValue]);
 
   const filteredObjectives = useMemo(() => {
     return OBJECTIVES.filter((obj) => {
@@ -114,6 +129,43 @@ const Step1Campaign: React.FC = () => {
 
         <div className="space-y-2.5">
           <Label
+            htmlFor="fb_page_id"
+            className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300"
+          >
+            {t("facebook_page", "Facebook Page")} <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={values?.fb_page_id || ""}
+            onValueChange={(val) => setFieldValue("fb_page_id", val)}
+          >
+            <SelectTrigger
+              className="h-10 sm:h-11 py-5 sm:py-5.5 mb-0! bg-slate-50/50 dark:bg-(--page-body-bg) border-slate-200 dark:border-(--card-border-color) focus:ring-2 focus:ring-primary/20 transition-all text-sm sm:text-base"
+            >
+              <SelectValue
+                placeholder={
+                  isLoadingPages
+                    ? t("loading", "Loading pages...")
+                    : t("select_facebook_page", "Select Facebook Page")
+                }
+              />
+            </SelectTrigger>
+            <SelectContent className="dark:bg-(--page-body-bg) border-slate-200 dark:border-(--card-border-color)">
+              {facebookPages.map((pg: any) => (
+                <SelectItem
+                  className="dark:hover:bg-(--table-hover) text-sm"
+                  key={pg._id || pg.page_id}
+                  value={pg._id || pg.page_id}
+                >
+                  {pg.page_name}{" "}
+                  {pg.is_default ? `(${t("default", "Default")})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2.5">
+          <Label
             htmlFor="daily_budget"
             className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300"
           >
@@ -125,7 +177,9 @@ const Step1Campaign: React.FC = () => {
               id="daily_budget"
               name="daily_budget"
               type="number"
-              placeholder="100"
+              min="1"
+              step="any"
+              placeholder="1"
               value={values?.daily_budget || ""}
               onChange={(e) => setFieldValue("daily_budget", e.target.value)}
               onBlur={handleBlur}
